@@ -30,20 +30,20 @@ public:
         return swmm_start(saveFlag);
     }
 
-    int step(double* elapsedTime) {
-        return swmm_step(elapsedTime);
+    int step(double elapsedTime) {
+        return swmm_step(&elapsedTime);
     }
 
-    int stride(int strideStep, double* elapsedTime) {
-        return swmm_stride(strideStep, elapsedTime);
+    int stride(int strideStep, double elapsedTime) {
+        return swmm_stride(strideStep, &elapsedTime);
     }
 
     int end() {
         return swmm_end();
     }
 
-    int getMassBalErr(float* runoff, float* flow, float* qual) {
-        return swmm_getMassBalErr(runoff, flow, qual);
+    int getMassBalErr(float* runoff, float flow, float qual) {
+        return swmm_getMassBalErr(runoff, &flow, &qual);
     }
 
     int report() {
@@ -94,7 +94,7 @@ public:
     }
 
     void decodeDate(double date, int* year, int* month, int* day, int* hour, int* minute, int* second, int* dayOfWeek) {
-        swmm_decodeDate(date, year, month, day, hour, minute, second, dayOfWeek);
+        swmm_decodeDate(date, &year, month, day, hour, minute, second, dayOfWeek);
     }
 };
 
