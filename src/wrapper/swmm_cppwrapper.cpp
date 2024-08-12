@@ -42,8 +42,8 @@ public:
         return swmm_end();
     }
 
-    int getMassBalErr(float* runoff, float flow, float qual) {
-        return swmm_getMassBalErr(runoff, &flow, &qual);
+    int getMassBalErr(float runoff, float flow, float qual) {
+        return swmm_getMassBalErr(&runoff, &flow, &qual);
     }
 
     int report() {
@@ -66,8 +66,10 @@ public:
         return swmm_getCount(objType);
     }
 
-    void getName(int objType, int index, std::string& name, int size) {
+    void getName(int objType, int index, std::string name, int size) {
         char* c_name = new char[size];
+        std::strcpy(c_name, name.c_str());
+
         swmm_getName(objType, index, c_name, size);
         name = std::string(c_name);
         delete[] c_name;
@@ -93,8 +95,8 @@ public:
         swmm_writeLine(line.c_str());
     }
 
-    void decodeDate(double date, int* year, int* month, int* day, int* hour, int* minute, int* second, int* dayOfWeek) {
-        swmm_decodeDate(date, &year, month, day, hour, minute, second, dayOfWeek);
+    void decodeDate(double date, int year, int month, int day, int hour, int minute, int second, int dayOfWeek) {
+        swmm_decodeDate(date, &year, &month, &day, &hour, &minute, &second, &dayOfWeek);
     }
 };
 
