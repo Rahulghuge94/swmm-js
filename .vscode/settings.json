@@ -43,5 +43,6 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/Rahul Ghuge/swmm-js/src/wrapper"
 }
