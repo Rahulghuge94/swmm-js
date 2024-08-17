@@ -14,5 +14,5 @@
             }
         }
     },
-    "postCreateCommand": "source /emsdk/emsdk_env.sh"
+    "postCreateCommand": "bash .devcontainer/install_emscripten.sh"
 }
