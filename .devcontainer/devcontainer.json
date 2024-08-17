@@ -1,8 +1,6 @@
 {
     "name": "C++ Development with Emscripten",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
+    
     "customizations": {
         "vscode": {
             "extensions": [
