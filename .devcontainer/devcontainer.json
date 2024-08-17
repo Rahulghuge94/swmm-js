@@ -14,5 +14,5 @@
             }
         }
     },
-    "postCreateCommand": "bash .devcontainer/install_emscripten.sh"
+    "postCreateCommand": "bash .devcontainer/em.sh"
 }
