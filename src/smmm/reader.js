@@ -17,15 +17,21 @@ const sections = {
 
 class SWMMIo {
     /*
-     class to read and write inp files.
-    */
+        SWMM INP file reader and writer class.
 
+        This class provides read and write functionality for SWMM INP files.
+        The SWMM Users Manual provides full documentation for the INP file format.
+    */
 
     constructor() {
         this.sections = JSON.parse(JSON.stringify(sections));
         this.model = JSON.parse(JSON.stringify(sections));
     }
-
+    
+    /**
+     * splits sections of inp file to dict.
+     * @param {string} rawData 
+     */
     splitSections(rawData) {
         let sections = rawData.split("[");
 
@@ -46,9 +52,14 @@ class SWMMIo {
 
     }
 
-    read_file(file) {
+    /**
+     * read inp file
+     * @param {string} file 
+     * @returns 
+     */
+    readFile(file) {
         file = file.replaceAll("\r\n", "\n"); //replace all \r
-        file = file.replaceAll("\t", " "); //replace all \r
+        file = file.replaceAll("\t", " "); //replace all \t
         
         let sections = file.split("[");
 
@@ -60,7 +71,8 @@ class SWMMIo {
                 if (lines.length > 0) {
                     let key = lines[0].toLowerCase().match(/\[([^\]]+)\]/g)[0].slice(1, -1);
                     this.sections[key] = secText;
-                    let method = "read_" + key;
+                    let _key = key[0].toUpperCase() + key.slice(1);
+                    let method = "read" + _key;
 
                     if (method in this) {
                         this.model[key] = this[method](secText, this.model[key]);
@@ -85,7 +97,7 @@ class SWMMIo {
         return this.model;
     }
 
-    write_title(titles=null) {
+    writTitle(titles=null) {
         if (!titles){
             titles = this.titles;
         }
@@ -93,7 +105,7 @@ class SWMMIo {
         return "[TITLE]\n" + titles.join("\n");
     }
 
-    read_title(rawTitles) {
+    readTitle(rawTitles) {
         let titles = rawTitles.split("\n").slice(1);
 
         if (titles[0]  === "[TITLE]") {
@@ -103,7 +115,7 @@ class SWMMIo {
         if (titles[titles.length - 1]  === "") {
             titles.pop();
         }
-        this.titles = titles;
+        this.model.titles = titles;
     }
 
     /**
@@ -127,10 +139,10 @@ class SWMMIo {
             HEAD_TOLERANCE: null, THREADS: null
         }
 
-        const lines = rawOptions.split("\n");
+        let lines = rawOptions.split("\n");
 
-        for (let line in lines) {
-            if (line && !line.startsWith(";")) {
+        for (let line of lines) {
+            if (line && (!line.startsWith(";") || !line.startsWith("["))) {
                 let _line = line.trimStart().split(";")[0].split(/\s+/);
                 let op = _line[0];
                 let val = _line[1];
@@ -138,7 +150,7 @@ class SWMMIo {
                 options[op] = val;
             }
         }
-        this.options = options;
+        this.model.options = options;
     }
 
     writeOptions(data = null) {
@@ -182,7 +194,7 @@ class SWMMIo {
             }
         }
 
-        this.report = report;
+        this.model.report = report;
     }
 
     writeReport(data = null) {
@@ -237,7 +249,7 @@ class SWMMIo {
             }
         }
 
-        this.files = files;
+        this.model.files = files;
     }
 
     writeFiles(files = null) {
@@ -286,7 +298,7 @@ class SWMMIo {
             }
         }
 
-        this.raingauges = rainGauges;
+        this.model.raingauges = rainGauges;
     }
 
     writeRainGauges(data = null) {
@@ -348,7 +360,7 @@ class SWMMIo {
             }
         }
 
-        this.evaporation = evaporation;
+        this.model.evaporation = evaporation;
     }
 
     writeEvaporation(data = null) {
@@ -445,7 +457,7 @@ class SWMMIo {
             }
         }
 
-        this.temperature = temperature;
+        this.model.temperature = temperature;
     }
 
     writeTemperature(data = null) {
@@ -524,7 +536,7 @@ class SWMMIo {
             }
         }
 
-        this.adjustments = adjustments;
+        this.model.adjustments = adjustments;
     }
 
     writeAdjustments(data = null) {
@@ -587,7 +599,7 @@ class SWMMIo {
         let subText = "[SUBCATCHMENTS]\n";
 
         if (!data) {
-            data = this.subcatchments;
+            data = this.model.subcatchments;
         }
 
         for (let sub of data) {
@@ -633,14 +645,14 @@ class SWMMIo {
             }
         }
 
-        this.subareas = subareas;
+        this.model.subareas = subareas;
     }
 
     writeSubareas(data = null) {
         let subText = "[SUBAREAS]\n";
 
         if (!data) {
-            data = this.subareas;
+            data = this.model.subareas;
         }
 
         for (let sub of data) {
@@ -680,14 +692,14 @@ class SWMMIo {
             }
         }
 
-        this.infiltrations = infiltrations;
+        this.model.infiltrations = infiltrations;
     }
 
     writeInfiltration(data = null) {
         let infilText = "[INFILTRATION]\n";
 
         if (!data) {
-            data = this.infiltrations;
+            data = this.model.infiltrations;
         }
 
         for (let infil of data) {
@@ -745,14 +757,14 @@ class SWMMIo {
             lidControls.push(currentLID);
         }
 
-        this.lidControls = lidControls;
+        this.model.lidControls = lidControls;
     }
 
     writeLIDControls(data = null) {
         let lidText = "[LID_CONTROLS]\n";
 
         if (!data) {
-            data = this.lidControls;
+            data = this.model.lidControls;
         }
 
         for (let lid of data) {
@@ -816,14 +828,14 @@ class SWMMIo {
             }
         }
 
-        this.lidUsage = lidUsage;
+        this.model.lidUsage = lidUsage;
     }
 
     writeLIDUsage(data = null) {
         let usageText = "[LID_USAGE]\n";
 
         if (!data) {
-            data = this.lidUsage;
+            data = this.model.lidUsage;
         }
 
         for (let lid of data) {
@@ -895,14 +907,14 @@ class SWMMIo {
             }
         }
 
-        this.aquifers = aquifers;
+        this.model.aquifers = aquifers;
     }
 
     writeAquifers(data = null) {
         let aquifersText = "[AQUIFERS]\n";
 
         if (!data) {
-            data = this.aquifers;
+            data = this.model.aquifers;
         }
 
         for (let aquifer of data) {
@@ -965,14 +977,14 @@ class SWMMIo {
             }
         }
 
-        this.groundwater = groundwaterData;
+        this.model.groundwater = groundwaterData;
     }
 
     writeGroundwater(data = null) {
         let groundwaterText = "[GROUNDWATER]\n";
 
         if (!data) {
-            data = this.groundwater;
+            data = this.model.groundwater;
         }
 
         for (let gw of data) {
@@ -1014,14 +1026,14 @@ class SWMMIo {
             }
         }
 
-        this.gwf = gwfData;
+        this.model.gwf = gwfData;
     }
 
     writeGWF(data = null) {
         let gwfText = "[GWF]\n";
 
         if (!data) {
-            data = this.gwf;
+            data = this.model.gwf;
         }
 
         for (let gwf of data) {
@@ -1054,14 +1066,14 @@ class SWMMIo {
             }
         }
 
-        this.snowpacks = snowpacks;
+        this.model.snowpacks = snowpacks;
     }
 
     writeSNOWPACKS(data = null) {
         let snowpacksText = "[SNOWPACKS]\n";
 
         if (!data) {
-            data = this.snowpacks;
+            data = this.model.snowpacks;
         }
 
         for (let snowpack of data) {
@@ -1100,14 +1112,14 @@ class SWMMIo {
             }
         }
 
-        this.junctions = junctions;
+        this.model.junctions = junctions;
     }
 
     writeJUNCTIONS(data = null) {
         let junctionsText = "[JUNCTIONS]\n";
 
         if (!data) {
-            data = this.junctions;
+            data = this.model.junctions;
         }
 
         for (let junction of data) {
@@ -1154,14 +1166,14 @@ class SWMMIo {
             }
         }
 
-        this.outfalls = outfalls;
+        this.model.outfalls = outfalls;
     }
 
     writeOUTFALLS(data = null) {
         let outfallsText = "[OUTFALLS]\n";
 
         if (!data) {
-            data = this.outfalls;
+            data = this.model.outfalls;
         }
 
         for (let outfall of data) {
@@ -1232,14 +1244,14 @@ class SWMMIo {
             }
         }
 
-        this.dividers = dividers;
+        this.model.dividers = dividers;
     }
 
     writeDIVIDERS(data = null) {
         let dividersText = "[DIVIDERS]\n";
 
         if (!data) {
-            data = this.dividers;
+            data = this.model.dividers;
         }
 
         for (let divider of data) {
@@ -1331,14 +1343,14 @@ class SWMMIo {
             }
         }
 
-        this.storageNodes = storageNodes;
+        this.model.storageNodes = storageNodes;
     }
 
     writeSTORAGE(data = null) {
         let storageText = "[STORAGE]\n";
 
         if (!data) {
-            data = this.storageNodes;
+            data = this.model.storageNodes;
         }
 
         for (let node of data) {
@@ -1402,14 +1414,14 @@ class SWMMIo {
             }
         }
 
-        this.conduits = conduits;
+        this.model.conduits = conduits;
     }
 
     writeCONDUITS(data = null) {
         let conduitsText = "[CONDUITS]\n";
 
         if (!data) {
-            data = this.conduits;
+            data = this.model.conduits;
         }
 
         for (let conduit of data) {
@@ -1453,14 +1465,14 @@ class SWMMIo {
             }
         }
 
-        this.pumps = pumps;
+        this.model.pumps = pumps;
     }
 
     writePUMPS(data = null) {
         let pumpsText = "[PUMPS]\n";
 
         if (!data) {
-            data = this.pumps;
+            data = this.model.pumps;
         }
 
         for (let pump of data) {
@@ -1509,14 +1521,14 @@ class SWMMIo {
             }
         }
 
-        this.orifices = orifices;
+        this.model.orifices = orifices;
     }
 
     writeORIFICES(data = null) {
         let orificesText = "[ORIFICES]\n";
 
         if (!data) {
-            data = this.orifices;
+            data = this.model.orifices;
         }
 
         for (let orifice of data) {
@@ -1570,14 +1582,14 @@ class SWMMIo {
             }
         }
 
-        this.weirs = weirs;
+        this.model.weirs = weirs;
     }
 
     writeWEIRS(data = null) {
         let weirsText = "[WEIRS]\n";
 
         if (!data) {
-            data = this.weirs;
+            data = this.model.weirs;
         }
 
         for (let weir of data) {
@@ -1642,14 +1654,14 @@ class SWMMIo {
             }
         }
 
-        this.outlets = outlets;
+        this.model.outlets = outlets;
     }
 
     writeOUTLETS(data = null) {
         let outletsText = "[OUTLETS]\n";
 
         if (!data) {
-            data = this.outlets;
+            data = this.model.outlets;
         }
 
         for (let outlet of data) {
@@ -1708,14 +1720,14 @@ class SWMMIo {
             }
         }
 
-        this.xsections = xsections;
+        this.model.xsections = xsections;
     }
 
     writeXSECTIONS(data = null) {
         let xsectionsText = "[XSECTIONS]\n";
 
         if (!data) {
-            data = this.xsections;
+            data = this.model.xsections;
         }
 
         for (let xsection of data) {
@@ -1787,14 +1799,14 @@ class SWMMIo {
             transects.push(currentTransect);
         }
 
-        this.transects = transects;
+        this.model.transects = transects;
     }
 
     writeTRANSECTS(data = null) {
         let transectsText = "[TRANSECTS]\n";
 
         if (!data) {
-            data = this.transects;
+            data = this.model.transects;
         }
 
         for (let transect of data) {
@@ -1847,14 +1859,14 @@ class SWMMIo {
             }
         }
 
-        this.streets = streets;
+        this.model.streets = streets;
     }
 
     writeSTREETS(data = null) {
         let streetsText = "[STREETS]\n";
 
         if (!data) {
-            data = this.streets;
+            data = this.model.streets;
         }
 
         for (let street of data) {
@@ -1919,14 +1931,14 @@ class SWMMIo {
             }
         }
 
-        this.inlets = inlets;
+        this.model.inlets = inlets;
     }
 
     writeINLETS(data = null) {
         let inletsText = "[INLETS]\n";
 
         if (!data) {
-            data = this.inlets;
+            data = this.model.inlets;
         }
 
         for (let inlet of data) {
@@ -1995,14 +2007,14 @@ class SWMMIo {
             }
         }
 
-        this.inletUsage = inletUsage;
+        this.model.inletUsage = inletUsage;
     }
 
     writeINLET_USAGE(data = null) {
         let inletUsageText = "[INLET_USAGE]\n";
 
         if (!data) {
-            data = this.inletUsage;
+            data = this.model.inletUsage;
         }
 
         for (let usage of data) {
@@ -2039,14 +2051,14 @@ class SWMMIo {
             }
         }
 
-        this.losses = losses;
+        this.model.losses = losses;
     }
 
     writeLOSSES(data = null) {
         let lossesText = "[LOSSES]\n";
 
         if (!data) {
-            data = this.losses;
+            data = this.model.losses;
         }
 
         for (let loss of data) {
@@ -2093,14 +2105,14 @@ class SWMMIo {
             }
         }
 
-        this.pollutants = pollutants;
+        this.model.pollutants = pollutants;
     }
 
     writePOLLUTANTS(data = null) {
         let pollutantsText = "[POLLUTANTS]\n";
 
         if (!data) {
-            data = this.pollutants;
+            data = this.model.pollutants;
         }
 
         for (let pollutant of data) {
@@ -2133,14 +2145,14 @@ class SWMMIo {
             }
         }
 
-        this.landUses = landUses;
+        this.model.landUses = landUses;
     }
 
     writeLANDUSES(data = null) {
         let landUsesText = "[LANDUSES]\n";
 
         if (!data) {
-            data = this.landUses;
+            data = this.model.landUses;
         }
 
         for (let landUse of data) {
@@ -2179,14 +2191,14 @@ class SWMMIo {
             }
         }
 
-        this.coverages = coverages;
+        this.model.coverages = coverages;
     }
 
     writeCOVERAGES(data = null) {
         let coveragesText = "[COVERAGES]\n";
 
         if (!data) {
-            data = this.coverages;
+            data = this.model.coverages;
         }
 
         let subcatMap = new Map();
@@ -2233,14 +2245,14 @@ class SWMMIo {
             }
         }
 
-        this.loadings = loadings;
+        this.model.loadings = loadings;
     }
 
     writeLOADINGS(data = null) {
         let loadingsText = "[LOADINGS]\n";
 
         if (!data) {
-            data = this.loadings;
+            data = this.model.loadings;
         }
 
         let subcatMap = new Map();
@@ -2286,14 +2298,14 @@ class SWMMIo {
             }
         }
 
-        this.buildups = buildups;
+        this.model.buildups = buildups;
     }
 
     writeBUILDUP(data = null) {
         let buildupText = "[BUILDUP]\n";
 
         if (!data) {
-            data = this.buildups;
+            data = this.model.buildups;
         }
 
         for (let buildup of data) {
@@ -2330,14 +2342,14 @@ class SWMMIo {
             }
         }
 
-        this.washoff = washoffList;
+        this.model.washoff = washoffList;
     }
 
     writeWASHOFF(data = null) {
         let washoffText = "[WASHOFF]\n";
 
         if (!data) {
-            data = this.washoff;
+            data = this.model.washoff;
         }
 
         for (let washoff of data) {
@@ -2368,14 +2380,14 @@ class SWMMIo {
             }
         }
 
-        this.treatment = treatmentList;
+        this.model.treatment = treatmentList;
     }
 
     writeTREATMENT(data = null) {
         let treatmentText = "[TREATMENT]\n";
 
         if (!data) {
-            data = this.treatment;
+            data = this.model.treatment;
         }
 
         for (let treatment of data) {
@@ -2414,14 +2426,14 @@ class SWMMIo {
             }
         }
 
-        this.inflows = inflowsList;
+        this.model.inflows = inflowsList;
     }
 
     writeINFLOWS(data = null) {
         let inflowsText = "[INFLOWS]\n";
 
         if (!data) {
-            data = this.inflows;
+            data = this.model.inflows;
         }
 
         for (let inflow of data) {
@@ -2465,14 +2477,14 @@ class SWMMIo {
             }
         }
 
-        this.dwf = dwfList;
+        this.model.dwf = dwfList;
     }
 
     writeDWF(data = null) {
         let dwfText = "[DWF]\n";
 
         if (!data) {
-            data = this.dwf;
+            data = this.model.dwf;
         }
 
         for (let dwf of data) {
@@ -2506,14 +2518,14 @@ class SWMMIo {
             }
         }
 
-        this.rdii = rdiiList;
+        this.model.rdii = rdiiList;
     }
 
     writeRDII(data = null) {
         let rdiiText = "[RDII]\n";
 
         if (!data) {
-            data = this.rdii;
+            data = this.model.rdii;
         }
 
         for (let rdii of data) {
@@ -2565,14 +2577,14 @@ class SWMMIo {
             }
         }
 
-        this.hydrographs = hydrographs;
+        this.model.hydrographs = hydrographs;
     }
 
     writeHYDROGRAPHS(data = null) {
         let hydrographsText = "[HYDROGRAPHS]\n";
 
         if (!data) {
-            data = this.hydrographs;
+            data = this.model.hydrographs;
         }
 
         for (let group of data) {
@@ -2622,14 +2634,14 @@ class SWMMIo {
             }
         }
 
-        this.curves = curves;
+        this.model.curves = curves;
     }
 
     writeCURVES(data = null) {
         let curvesText = "[CURVES]\n";
 
         if (!data) {
-            data = this.curves;
+            data = this.model.curves;
         }
 
         for (let curve of data) {
@@ -2684,14 +2696,14 @@ class SWMMIo {
             }
         }
 
-        this.timeseries = timeseries;
+        this.model.timeseries = timeseries;
     }
 
     writeTIMESERIES(data = null) {
         let timeseriesText = "[TIMESERIES]\n";
 
         if (!data) {
-            data = this.timeseries;
+            data = this.model.timeseries;
         }
 
         for (let series of data) {
@@ -2732,14 +2744,14 @@ class SWMMIo {
             }
         }
 
-        this.patterns = patterns;
+        this.model.patterns = patterns;
     }
 
     writePATTERNS(data = null) {
         let patternsText = "[PATTERNS]\n";
 
         if (!data) {
-            data = this.patterns;
+            data = this.model.patterns;
         }
 
         for (let pattern of data) {
@@ -2787,14 +2799,14 @@ class SWMMIo {
             controls.push(currentControl);
         }
 
-        this.controls = controls;
+        this.model.controls = controls;
     }
 
     writeCONTROLS(data = null) {
         let controlsText = "[CONTROLS]\n";
 
         if (!data) {
-            data = this.controls;
+            data = this.model.controls;
         }
 
         for (let control of data) {
@@ -2820,6 +2832,6 @@ class SWMMIo {
     }
 }
 
-let rawString = fs.readFileSync("C:\\Users\\Rahul Ghuge\\Downloads\\ex.inp", "utf-8");
+let rawString = fs.readFileSync("C:\\Users\\GHUG5611\\Downloads\\Subarea Routing.inp", "utf-8");
 let red = new SWMMIo();
-red.splitSections(rawString);
+red.readFile(rawString);
